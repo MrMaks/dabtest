@@ -1,6 +1,9 @@
 bundle:
   name: dab-dss-demo
 
+include:
+  - resources/*.yml
+
 artifacts:
   # supports Workspace or Volumes paths only
   default:
@@ -54,6 +57,10 @@ resources:
               - ${var.root_path}
           # libraries:
           #   - whl: ./dist/*.whl
+
+        - task_key: run_subpipeline
+          run_job_task:
+              job_id: ${resources.jobs.submarine_job.id}
 
 # sync:
 #   exclude:
