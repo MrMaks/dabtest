@@ -1,0 +1,68 @@
+bundle:
+  name: dab-dss-demo
+
+artifacts:
+  # supports Workspace or Volumes paths only
+  default:
+    type: whl
+    # build: poetry build
+    path: . # makes sure this repo is built with requirements.txt ref!
+
+variables:
+  root_path:
+    description: root_path for the target
+    default: /Shared/.bundle/${bundle.target}/${bundle.name}
+  existing_cluster_id: 
+    description: cluster to use
+    default: 1121-184306-msho8xb8
+
+
+resources:
+  jobs:
+    demo-job:
+      name: demo-job
+      tasks:
+        - task_key: step1
+          # job_cluster_key: test_cluster
+          existing_cluster_id: ${var.existing_cluster_id}
+          spark_python_task:
+            python_file: "src/my_package/main.py"
+            parameters:
+              - "--root_path"
+              - ${var.root_path}
+          libraries:
+            # install this repo wheel - see artifacts section
+            - whl: ./dist/*.whl
+            # reference other wheels
+            # - whl: /Workspace/global_libs/lib.whl
+            # - whl: /Workspace/${var.root_path}/files/deps_bundled/my_bundled_wheel.whl
+
+            # - pypi:
+            #     package: my_package==2.0.2
+            #     repo: INDEX_URL
+            # - jar: /Volumes/main/default/my-volume/my-java-library-1.0.jar
+
+        - task_key: step2
+          existing_cluster_id: ${var.existing_cluster_id}
+          # job_cluster_key: test_cluster
+          depends_on:
+            - task_key: step1
+          spark_python_task:
+            python_file: "src/my_package/step2.py"
+            parameters:
+              - "--root_path"
+              - ${var.root_path}
+          # libraries:
+          #   - whl: ./dist/*.whl
+
+# sync:
+#   exclude:
+#     - extra_dist/*
+
+targets:
+  dev:
+    workspace:
+      host: https://adb-664990564762667.7.azuredatabricks.net/
+      root_path: ${var.root_path}
+
+
